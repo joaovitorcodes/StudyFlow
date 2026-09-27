@@ -1,0 +1,1664 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="StudyFlow - O seu organizador de estudos pessoal com Pomodoro, Metas, Estatísticas e Agenda">
+    <title>StudyFlow</title>
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+                    },
+                    colors: {
+                        brand: {
+                            50: '#eff6ff',
+                            100: '#dbeafe',
+                            400: '#60a5fa',
+                            500: '#3b82f6',
+                            600: '#2563eb',
+                            700: '#1d4ed8',
+                        },
+                        glass: {
+                            dark: 'rgba(15, 23, 42, 0.75)',
+                            card: 'rgba(30, 41, 59, 0.7)',
+                            light: 'rgba(255, 255, 255, 0.85)',
+                            lightCard: 'rgba(255, 255, 255, 0.7)',
+                            borderDark: 'rgba(255, 255, 255, 0.1)',
+                            borderLight: 'rgba(0, 0, 0, 0.08)'
+                        }
+                    },
+                    boxShadow: {
+                        'glow': '0 0 25px -5px rgba(59, 130, 246, 0.3)',
+                        'glow-purple': '0 0 25px -5px rgba(168, 85, 247, 0.3)',
+                    }
+                }
+            }
+        }
+    </script>
+
+    <!-- Custom Glassmorphism Styles -->
+    <style>
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(100, 116, 139, 0.4);
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(100, 116, 139, 0.7);
+        }
+
+        .glass-panel {
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+        }
+
+        .active-nav-item {
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.2) 0%, rgba(147, 51, 234, 0.2) 100%);
+            border-left: 4px solid #3b82f6;
+            color: #60a5fa !important;
+        }
+
+        .light .active-nav-item {
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.12) 0%, rgba(147, 51, 234, 0.12) 100%);
+            border-left: 4px solid #2563eb;
+            color: #2563eb !important;
+        }
+
+        /* Pulse animation for timer */
+        @keyframes pulse-ring {
+            0% { transform: scale(0.95); opacity: 0.8; }
+            50% { transform: scale(1.03); opacity: 0.4; }
+            100% { transform: scale(0.95); opacity: 0.8; }
+        }
+        .timer-active-ring {
+            animation: pulse-ring 2.5s infinite ease-in-out;
+        }
+    </style>
+</head>
+
+<body class="bg-[#090d16] text-slate-100 font-sans antialiased min-h-screen selection:bg-brand-500 selection:text-white transition-colors duration-300">
+
+    <div id="appContainer" class="flex min-h-screen relative overflow-x-hidden">
+
+        <!-- =========================
+             SIDEBAR NAVIGATION
+        ========================== -->
+        <aside id="sidebar" class="fixed inset-y-0 left-0 z-40 w-64 bg-slate-900/90 dark:bg-slate-950/90 glass-panel border-r border-slate-800/80 dark:border-slate-800/60 transform -translate-x-full lg:translate-x-0 transition-transform duration-300 ease-out flex flex-col justify-between">
+            <div class="p-5">
+                <!-- Logo -->
+                <div class="flex items-center gap-3 pb-6 mb-6 border-b border-slate-800/80">
+                    <div class="w-11 h-11 rounded-2xl bg-gradient-to-tr from-brand-600 to-purple-600 flex items-center justify-center text-2xl shadow-glow text-white font-bold">
+                        ⚡
+                    </div>
+                    <div>
+                        <h1 class="font-extrabold text-lg leading-tight tracking-wide bg-gradient-to-r from-white via-slate-200 to-slate-400 bg-clip-text text-transparent">
+                            StudyFlow
+                        </h1>
+                        <p class="text-xs text-brand-400 font-medium">Organizador Pro</p>
+                    </div>
+                </div>
+
+                <!-- Navigation Items -->
+                <nav class="space-y-1.5" id="navigationMenu">
+                    <button class="menu-item active-nav-item w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-slate-300 hover:text-white hover:bg-slate-800/50 transition-all duration-200 group" data-page="dashboard">
+                        <span class="text-lg group-hover:scale-110 transition-transform">📊</span>
+                        <span>Dashboard</span>
+                    </button>
+                    <button class="menu-item w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-slate-300 hover:text-white hover:bg-slate-800/50 transition-all duration-200 group" data-page="estudos">
+                        <span class="text-lg group-hover:scale-110 transition-transform">📚</span>
+                        <span>Meus Estudos</span>
+                    </button>
+                    <button class="menu-item w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-slate-300 hover:text-white hover:bg-slate-800/50 transition-all duration-200 group" data-page="tarefas">
+                        <span class="text-lg group-hover:scale-110 transition-transform">✅</span>
+                        <span>Tarefas</span>
+                    </button>
+                    <button class="menu-item w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-slate-300 hover:text-white hover:bg-slate-800/50 transition-all duration-200 group" data-page="agenda">
+                        <span class="text-lg group-hover:scale-110 transition-transform">📅</span>
+                        <span>Agenda</span>
+                    </button>
+                    <button class="menu-item w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-slate-300 hover:text-white hover:bg-slate-800/50 transition-all duration-200 group" data-page="cronometro">
+                        <span class="text-lg group-hover:scale-110 transition-transform">⏱️</span>
+                        <span>Cronômetro / Pomodoro</span>
+                    </button>
+                    <button class="menu-item w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-slate-300 hover:text-white hover:bg-slate-800/50 transition-all duration-200 group" data-page="metas">
+                        <span class="text-lg group-hover:scale-110 transition-transform">🎯</span>
+                        <span>Metas</span>
+                    </button>
+                    <button class="menu-item w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-slate-300 hover:text-white hover:bg-slate-800/50 transition-all duration-200 group" data-page="anotacoes">
+                        <span class="text-lg group-hover:scale-110 transition-transform">📝</span>
+                        <span>Anotações</span>
+                    </button>
+                    <button class="menu-item w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-slate-300 hover:text-white hover:bg-slate-800/50 transition-all duration-200 group" data-page="estatisticas">
+                        <span class="text-lg group-hover:scale-110 transition-transform">📈</span>
+                        <span>Estatísticas</span>
+                    </button>
+                </nav>
+            </div>
+
+            <!-- Footer Controls -->
+            <div class="p-4 border-t border-slate-800/80 space-y-2">
+                <button id="themeButton" class="w-full flex items-center justify-between px-4 py-2.5 rounded-xl text-xs font-semibold text-slate-300 bg-slate-800/40 hover:bg-slate-800/80 border border-slate-700/50 transition-all">
+                    <span class="flex items-center gap-2">
+                        <span id="themeIcon">🌙</span> <span id="themeText">Modo Escuro</span>
+                    </span>
+                    <span class="text-[10px] px-2 py-0.5 rounded-full bg-slate-700 text-slate-300">Alternar</span>
+                </button>
+
+                <button id="resetButton" class="w-full flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-semibold text-rose-400/90 hover:text-rose-300 bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/20 transition-all">
+                    <span>🗑️</span>
+                    <span>Redefinir Dados</span>
+                </button>
+            </div>
+        </aside>
+
+        <!-- Overlay for Mobile Sidebar -->
+        <div id="sidebarOverlay" class="fixed inset-0 bg-slate-950/70 backdrop-blur-sm z-30 hidden lg:hidden transition-opacity"></div>
+
+        <!-- =========================
+             MAIN CONTENT AREA
+        ========================== -->
+        <main class="flex-1 lg:ml-64 min-h-screen flex flex-col p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto w-full">
+
+            <!-- Top bar -->
+            <header class="flex items-center justify-between pb-6 mb-6 border-b border-slate-800/60">
+                <div class="flex items-center gap-3">
+                    <button id="mobileMenu" class="lg:hidden p-2.5 rounded-xl bg-slate-800/80 border border-slate-700/60 text-slate-200 hover:bg-slate-700 transition">
+                        ☰
+                    </button>
+                    <div>
+                        <h2 id="pageTitle" class="text-2xl sm:text-3xl font-extrabold tracking-tight text-white">Dashboard</h2>
+                        <p id="pageSubtitle" class="text-xs sm:text-sm text-slate-400 mt-0.5">Organize seus estudos e acompanhe seu progresso real.</p>
+                    </div>
+                </div>
+
+                <div class="flex items-center gap-3 sm:gap-4">
+                    <button id="notificationButton" onclick="notify('Você possui todas as notificações em dia!', 'success')" class="p-2.5 rounded-xl bg-slate-800/60 hover:bg-slate-700/70 border border-slate-700/60 text-slate-300 transition relative">
+                        🔔
+                        <span class="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-brand-500 animate-pulse"></span>
+                    </button>
+
+                    <div class="flex items-center gap-3 pl-2 sm:pl-4 border-l border-slate-800">
+                        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-brand-500 to-indigo-600 flex items-center justify-center text-lg shadow-inner">
+                            👨‍🎓
+                        </div>
+                        <div class="hidden sm:block">
+                            <strong class="block text-xs font-bold text-slate-200 leading-tight">Estudante</strong>
+                            <span class="text-[11px] text-emerald-400 font-semibold flex items-center gap-1">
+                                <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping"></span> Ativo
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <!-- =========================
+                 PAGES CONTAINER
+            ========================== -->
+            <div id="pagesContainer" class="flex-1">
+
+                <!-- PAGE: DASHBOARD -->
+                <section id="dashboard" class="page space-y-6">
+                    <!-- Welcome banner -->
+                    <div class="relative overflow-hidden rounded-3xl bg-gradient-to-r from-brand-900/60 via-slate-900/80 to-purple-900/40 border border-brand-500/20 p-6 sm:p-8 shadow-glow">
+                        <div class="absolute -right-10 -bottom-10 w-60 h-60 bg-brand-500/10 rounded-full blur-3xl pointer-events-none"></div>
+                        <div class="relative z-10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                            <div>
+                                <span class="inline-block px-3 py-1 rounded-full bg-brand-500/20 border border-brand-500/30 text-brand-300 text-xs font-bold tracking-wider uppercase mb-3">
+                                    Foco nos Estudos ✨
+                                </span>
+                                <h3 class="text-2xl sm:text-3xl font-black text-white">Bem-vindo ao StudyFlow!</h3>
+                                <p class="text-sm text-slate-300 mt-1 max-w-xl">Acompanhe suas metas diárias, controle seus tempos de estudo e alcance seus objetivos com consistência.</p>
+                            </div>
+                            <div class="text-5xl sm:text-6xl filter drop-shadow-lg self-end sm:self-center">
+                                🎓
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Metrics Grid -->
+                    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
+                        <div class="p-5 rounded-2xl bg-slate-900/60 border border-slate-800/80 flex items-center gap-4 hover:border-brand-500/40 transition">
+                            <div class="w-12 h-12 rounded-xl bg-brand-500/15 border border-brand-500/30 text-brand-400 flex items-center justify-center text-2xl">📚</div>
+                            <div>
+                                <span class="block text-xs font-medium text-slate-400">Matérias</span>
+                                <strong id="totalSubjects" class="text-xl sm:text-2xl font-bold text-white">0</strong>
+                            </div>
+                        </div>
+                        <div class="p-5 rounded-2xl bg-slate-900/60 border border-slate-800/80 flex items-center gap-4 hover:border-emerald-500/40 transition">
+                            <div class="w-12 h-12 rounded-xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 flex items-center justify-center text-2xl">⏱️</div>
+                            <div>
+                                <span class="block text-xs font-medium text-slate-400">Horas Estudadas</span>
+                                <strong id="totalHours" class="text-xl sm:text-2xl font-bold text-white">0h</strong>
+                            </div>
+                        </div>
+                        <div class="p-5 rounded-2xl bg-slate-900/60 border border-slate-800/80 flex items-center gap-4 hover:border-amber-500/40 transition">
+                            <div class="w-12 h-12 rounded-xl bg-amber-500/15 border border-amber-500/30 text-amber-400 flex items-center justify-center text-2xl">📋</div>
+                            <div>
+                                <span class="block text-xs font-medium text-slate-400">Tarefas Pendentes</span>
+                                <strong id="pendingTasks" class="text-xl sm:text-2xl font-bold text-white">0</strong>
+                            </div>
+                        </div>
+                        <div class="p-5 rounded-2xl bg-slate-900/60 border border-slate-800/80 flex items-center gap-4 hover:border-purple-500/40 transition">
+                            <div class="w-12 h-12 rounded-xl bg-purple-500/15 border border-purple-500/30 text-purple-400 flex items-center justify-center text-2xl">🎯</div>
+                            <div>
+                                <span class="block text-xs font-medium text-slate-400">Metas Concluídas</span>
+                                <strong id="completedGoals" class="text-xl sm:text-2xl font-bold text-white">0</strong>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Dashboard Grid -->
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        <!-- Próximos Estudos -->
+                        <div class="p-6 rounded-2xl bg-slate-900/60 border border-slate-800/80 space-y-4">
+                            <div class="flex items-center justify-between pb-3 border-b border-slate-800">
+                                <div>
+                                    <h4 class="font-bold text-slate-100">Próximos Estudos</h4>
+                                    <p class="text-xs text-slate-400">Planejamento agendado</p>
+                                </div>
+                                <button data-open="addSchedule" class="px-3 py-1.5 rounded-lg bg-brand-500/20 hover:bg-brand-500/30 text-brand-300 text-xs font-semibold border border-brand-500/30 transition">
+                                    + Agendar
+                                </button>
+                            </div>
+                            <div id="dashboardStudies" class="space-y-3"></div>
+                        </div>
+
+                        <!-- Tarefas Recentes -->
+                        <div class="p-6 rounded-2xl bg-slate-900/60 border border-slate-800/80 space-y-4">
+                            <div class="flex items-center justify-between pb-3 border-b border-slate-800">
+                                <div>
+                                    <h4 class="font-bold text-slate-100">Tarefas Urgentes</h4>
+                                    <p class="text-xs text-slate-400">Atividades a concluir</p>
+                                </div>
+                                <button data-open="addTask" class="px-3 py-1.5 rounded-lg bg-brand-500/20 hover:bg-brand-500/30 text-brand-300 text-xs font-semibold border border-brand-500/30 transition">
+                                    + Nova Tarefa
+                                </button>
+                            </div>
+                            <div id="dashboardTasks" class="space-y-3"></div>
+                        </div>
+                    </div>
+
+                    <!-- Progresso Geral por Matéria -->
+                    <div class="p-6 rounded-2xl bg-slate-900/60 border border-slate-800/80 space-y-4">
+                        <div class="flex items-center justify-between pb-3 border-b border-slate-800">
+                            <div>
+                                <h4 class="font-bold text-slate-100">Visão Geral do Progresso</h4>
+                                <p class="text-xs text-slate-400">Evolução dos conteúdos</p>
+                            </div>
+                            <button data-page-target="estudos" class="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold transition">
+                                Ver Matérias →
+                            </button>
+                        </div>
+                        <div id="subjectProgress" class="space-y-4"></div>
+                    </div>
+                </section>
+
+                <!-- PAGE: MEUS ESTUDOS -->
+                <section id="estudos" class="page hidden space-y-6">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                        <div>
+                            <h3 class="text-xl font-bold text-white">Matérias e Disciplinas</h3>
+                            <p class="text-xs text-slate-400">Gerencie conteúdos e tópicos de estudo</p>
+                        </div>
+                        <button data-open="addSubject" class="px-4 py-2.5 rounded-xl bg-brand-600 hover:bg-brand-500 text-white font-semibold text-sm shadow-glow transition">
+                            + Nova Matéria
+                        </button>
+                    </div>
+
+                    <!-- Filter Toolbar -->
+                    <div class="flex flex-col sm:flex-row gap-3">
+                        <div class="flex-1 relative">
+                            <span class="absolute left-3.5 top-3 text-slate-500">🔍</span>
+                            <input type="text" id="subjectSearch" placeholder="Pesquisar matéria pelo nome..." class="w-full pl-10 pr-4 py-2.5 rounded-xl bg-slate-900/80 border border-slate-800 text-sm text-slate-200 placeholder-slate-500 focus:outline-none focus:border-brand-500">
+                        </div>
+                        <select id="subjectFilter" class="px-4 py-2.5 rounded-xl bg-slate-900/80 border border-slate-800 text-sm text-slate-200 focus:outline-none focus:border-brand-500">
+                            <option value="all">Todas as matérias</option>
+                            <option value="progress">Em andamento (&lt;100%)</option>
+                            <option value="completed">Concluídas (100%)</option>
+                        </select>
+                    </div>
+
+                    <div id="subjectsGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5"></div>
+                </section>
+
+                <!-- PAGE: TAREFAS -->
+                <section id="tarefas" class="page hidden space-y-6">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                        <div>
+                            <h3 class="text-xl font-bold text-white">Gerenciador de Tarefas</h3>
+                            <p class="text-xs text-slate-400">Organize seus trabalhos e entregas pendentes</p>
+                        </div>
+                        <button data-open="addTask" class="px-4 py-2.5 rounded-xl bg-brand-600 hover:bg-brand-500 text-white font-semibold text-sm shadow-glow transition">
+                            + Nova Tarefa
+                        </button>
+                    </div>
+
+                    <!-- Filters -->
+                    <div class="flex items-center gap-2 overflow-x-auto pb-2">
+                        <button data-task-filter="all" class="px-4 py-2 rounded-xl text-xs font-semibold bg-brand-600 text-white transition">Todas</button>
+                        <button data-task-filter="pending" class="px-4 py-2 rounded-xl text-xs font-semibold bg-slate-800 text-slate-400 hover:text-white transition">Pendentes</button>
+                        <button data-task-filter="completed" class="px-4 py-2 rounded-xl text-xs font-semibold bg-slate-800 text-slate-400 hover:text-white transition">Concluídas</button>
+                        <button data-task-filter="high" class="px-4 py-2 rounded-xl text-xs font-semibold bg-slate-800 text-slate-400 hover:text-white transition">Alta Prioridade</button>
+                    </div>
+
+                    <div id="tasksContainer" class="space-y-3"></div>
+                </section>
+
+                <!-- PAGE: AGENDA -->
+                <section id="agenda" class="page hidden space-y-6">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                        <div>
+                            <h3 class="text-xl font-bold text-white">Agenda de Estudos</h3>
+                            <p class="text-xs text-slate-400">Planejamento mensal e dias de estudo</p>
+                        </div>
+                        <button data-open="addSchedule" class="px-4 py-2.5 rounded-xl bg-brand-600 hover:bg-brand-500 text-white font-semibold text-sm shadow-glow transition">
+                            + Planejar Estudo
+                        </button>
+                    </div>
+
+                    <div class="p-6 rounded-2xl bg-slate-900/80 border border-slate-800 shadow-xl space-y-6">
+                        <div class="flex items-center justify-between border-b border-slate-800 pb-4">
+                            <button id="previousMonth" class="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 transition">← Anterior</button>
+                            <h4 id="calendarTitle" class="text-lg font-bold text-white"></h4>
+                            <button id="nextMonth" class="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 transition">Próximo →</button>
+                        </div>
+
+                        <div class="grid grid-cols-7 gap-1 text-center font-semibold text-xs text-slate-400 uppercase tracking-wider pb-2">
+                            <span>Dom</span><span>Seg</span><span>Ter</span><span>Qua</span><span>Qui</span><span>Sex</span><span>Sáb</span>
+                        </div>
+
+                        <div id="calendarDays" class="grid grid-cols-7 gap-2"></div>
+                    </div>
+                </section>
+
+                <!-- PAGE: CRONÔMETRO & POMODORO -->
+                <section id="cronometro" class="page hidden space-y-6">
+                    <div class="p-8 rounded-3xl bg-slate-900/80 border border-slate-800 text-center relative overflow-hidden shadow-2xl">
+                        <!-- Mode Tabs -->
+                        <div class="flex justify-center gap-2 mb-8 max-w-md mx-auto p-1.5 rounded-2xl bg-slate-950/80 border border-slate-800">
+                            <button id="modePomodoro" onclick="setTimerMode('pomodoro')" class="flex-1 py-2 rounded-xl text-xs font-bold bg-brand-600 text-white transition">Foco (25m)</button>
+                            <button id="modeShortBreak" onclick="setTimerMode('shortBreak')" class="flex-1 py-2 rounded-xl text-xs font-bold text-slate-400 hover:text-white transition">Pausa Curta (5m)</button>
+                            <button id="modeLongBreak" onclick="setTimerMode('longBreak')" class="flex-1 py-2 rounded-xl text-xs font-bold text-slate-400 hover:text-white transition">Pausa Longa (15m)</button>
+                        </div>
+
+                        <!-- Timer Circular Visual -->
+                        <div class="relative w-64 h-64 mx-auto flex items-center justify-center my-4">
+                            <div id="timerRing" class="absolute inset-0 rounded-full border-8 border-brand-500/20"></div>
+                            <div class="flex flex-col items-center justify-center z-10 space-y-1">
+                                <span id="timerDisplay" class="text-5xl font-black tracking-tight text-white font-mono">00:00:00</span>
+                                <span id="timerLabel" class="text-xs font-bold tracking-widest text-brand-400 uppercase">SESSÃO DE FOCO</span>
+                            </div>
+                        </div>
+
+                        <!-- Controls -->
+                        <div class="flex items-center justify-center gap-3 my-6">
+                            <button id="startTimer" class="px-8 py-3 rounded-2xl bg-brand-600 hover:bg-brand-500 text-white font-bold text-sm shadow-glow transition transform active:scale-95">
+                                ▶ Iniciar
+                            </button>
+                            <button id="pauseTimer" class="px-6 py-3 rounded-2xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-sm transition transform active:scale-95">
+                                ⏸ Pausar
+                            </button>
+                            <button id="stopTimer" class="px-6 py-3 rounded-2xl bg-rose-500/15 hover:bg-rose-500/25 text-rose-400 border border-rose-500/30 font-bold text-sm transition transform active:scale-95">
+                                ■ Concluir & Salvar
+                            </button>
+                        </div>
+
+                        <div class="max-w-xs mx-auto text-left space-y-1">
+                            <label class="text-xs text-slate-400 font-medium">Vincular a uma Matéria:</label>
+                            <select id="timerSubject" class="w-full px-4 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-sm text-slate-200 focus:outline-none focus:border-brand-500"></select>
+                        </div>
+                    </div>
+
+                    <!-- History -->
+                    <div class="p-6 rounded-2xl bg-slate-900/60 border border-slate-800 space-y-4">
+                        <h4 class="font-bold text-white text-base">Histórico de Sessões Registradas</h4>
+                        <div id="studyHistory" class="space-y-3"></div>
+                    </div>
+                </section>
+
+                <!-- PAGE: METAS -->
+                <section id="metas" class="page hidden space-y-6">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                        <div>
+                            <h3 class="text-xl font-bold text-white">Metas de Estudo</h3>
+                            <p class="text-xs text-slate-400">Acompanhe seu progresso de horas, tarefas ou páginas</p>
+                        </div>
+                        <button data-open="addGoal" class="px-4 py-2.5 rounded-xl bg-brand-600 hover:bg-brand-500 text-white font-semibold text-sm shadow-glow transition">
+                            + Nova Meta
+                        </button>
+                    </div>
+
+                    <div id="goalsContainer" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5"></div>
+                </section>
+
+                <!-- PAGE: ANOTAÇÕES -->
+                <section id="anotacoes" class="page hidden space-y-6">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                        <div>
+                            <h3 class="text-xl font-bold text-white">Anotações e Lembretes</h3>
+                            <p class="text-xs text-slate-400">Guarde conceitos, resumos e fórmulas importantes</p>
+                        </div>
+                        <button data-open="addNote" class="px-4 py-2.5 rounded-xl bg-brand-600 hover:bg-brand-500 text-white font-semibold text-sm shadow-glow transition">
+                            + Nova Anotação
+                        </button>
+                    </div>
+
+                    <div id="notesGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5"></div>
+                </section>
+
+                <!-- PAGE: ESTATÍSTICAS -->
+                <section id="estatisticas" class="page hidden space-y-6">
+                    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                        <div class="p-5 rounded-2xl bg-slate-900/60 border border-slate-800 flex items-center gap-4">
+                            <div class="w-12 h-12 rounded-xl bg-brand-500/15 text-brand-400 flex items-center justify-center text-2xl">⏱️</div>
+                            <div>
+                                <span class="block text-xs text-slate-400">Total Estudado</span>
+                                <strong id="statsTotalHours" class="text-xl font-bold text-white">0h</strong>
+                            </div>
+                        </div>
+                        <div class="p-5 rounded-2xl bg-slate-900/60 border border-slate-800 flex items-center gap-4">
+                            <div class="w-12 h-12 rounded-xl bg-amber-500/15 text-amber-400 flex items-center justify-center text-2xl">🔥</div>
+                            <div>
+                                <span class="block text-xs text-slate-400">Ofensiva (Streak)</span>
+                                <strong id="studyStreak" class="text-xl font-bold text-white">0 dias</strong>
+                            </div>
+                        </div>
+                        <div class="p-5 rounded-2xl bg-slate-900/60 border border-slate-800 flex items-center gap-4">
+                            <div class="w-12 h-12 rounded-xl bg-purple-500/15 text-purple-400 flex items-center justify-center text-2xl">📚</div>
+                            <div>
+                                <span class="block text-xs text-slate-400">Foco Principal</span>
+                                <strong id="mainSubject" class="text-xl font-bold text-white">-</strong>
+                            </div>
+                        </div>
+                        <div class="p-5 rounded-2xl bg-slate-900/60 border border-slate-800 flex items-center gap-4">
+                            <div class="w-12 h-12 rounded-xl bg-emerald-500/15 text-emerald-400 flex items-center justify-center text-2xl">✅</div>
+                            <div>
+                                <span class="block text-xs text-slate-400">Tarefas Concluídas</span>
+                                <strong id="statsCompletedTasks" class="text-xl font-bold text-white">0</strong>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Chart Box -->
+                    <div class="p-6 rounded-2xl bg-slate-900/60 border border-slate-800 space-y-4">
+                        <h4 class="font-bold text-white text-base">Horas Dedicadas por Matéria</h4>
+                        <div id="hoursChart" class="h-64 flex items-end justify-center gap-4 pt-8 px-4 border-b border-slate-800"></div>
+                    </div>
+                </section>
+
+            </div>
+        </main>
+    </div>
+
+    <!-- =========================
+         GLOBAL MODAL OVERLAY
+    ========================== -->
+    <div id="modalOverlay" class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md hidden items-center justify-center p-4 transition-all">
+        <div class="bg-slate-900 border border-slate-800 rounded-3xl max-w-lg w-full p-6 sm:p-8 relative shadow-2xl max-h-[90vh] overflow-y-auto">
+            <button id="modalClose" class="absolute top-5 right-5 w-8 h-8 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white flex items-center justify-center transition">
+                ✕
+            </button>
+            <div id="modalContent"></div>
+        </div>
+    </div>
+
+    <!-- TOAST NOTIFICATION -->
+    <div id="notification" class="fixed bottom-6 right-6 z-50 flex items-center gap-3 px-5 py-3.5 rounded-2xl bg-slate-900 border border-slate-700/80 text-white shadow-2xl transform translate-y-20 opacity-0 transition-all duration-300">
+        <span id="notificationIcon" class="w-6 h-6 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center font-bold text-xs">✓</span>
+        <span id="notificationText" class="text-xs font-semibold">Mensagem do sistema</span>
+    </div>
+
+    <script>
+        /* =========================================================
+           STUDYFLOW - CORE JAVASCRIPT
+        ========================================================= */
+
+        const DB_KEY = "studyflow_database";
+
+        // Initial Database standard structure
+        let db = JSON.parse(localStorage.getItem(DB_KEY)) || {
+            subjects: [],
+            tasks: [],
+            schedules: [],
+            goals: [],
+            notes: [],
+            studySessions: [],
+            settings: {
+                theme: "dark"
+            }
+        };
+
+        function saveDatabase() {
+            localStorage.setItem(DB_KEY, JSON.stringify(db));
+        }
+
+        function generateId() {
+            return Date.now().toString(36) + Math.random().toString(36).substring(2, 8);
+        }
+
+        /* Web Audio Sound Feedback Generator */
+        function playChime() {
+            try {
+                const ctx = new (window.AudioContext || window.webkitAudioContext)();
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(587.33, ctx.currentTime); // D5
+                osc.frequency.exponentialRampToValueAtTime(880, ctx.currentTime + 0.3); // A5
+                gain.gain.setValueAtTime(0.3, ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.8);
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+                osc.start();
+                osc.stop(ctx.currentTime + 0.8);
+            } catch (e) {
+                console.log("Audio non-interactive");
+            }
+        }
+
+        /* Toast Notifications */
+        function notify(message, type = "success") {
+            const notification = document.getElementById("notification");
+            const text = document.getElementById("notificationText");
+            const icon = document.getElementById("notificationIcon");
+
+            text.textContent = message;
+            if (type === "error") {
+                icon.textContent = "!";
+                icon.className = "w-6 h-6 rounded-full bg-rose-500/20 text-rose-400 flex items-center justify-center font-bold text-xs";
+            } else {
+                icon.textContent = "✓";
+                icon.className = "w-6 h-6 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center font-bold text-xs";
+            }
+
+            notification.classList.remove("translate-y-20", "opacity-0");
+            setTimeout(() => {
+                notification.classList.add("translate-y-20", "opacity-0");
+            }, 3000);
+        }
+
+        /* Navigation Logic */
+        const pages = document.querySelectorAll(".page");
+        const pageTitle = document.getElementById("pageTitle");
+        const pageSubtitle = document.getElementById("pageSubtitle");
+
+        const pageInfo = {
+            dashboard: ["Dashboard", "Organize seus estudos e acompanhe seu progresso real."],
+            estudos: ["Meus Estudos", "Organize as matérias e acompanhe as horas dedicadas."],
+            tarefas: ["Gerenciador de Tarefas", "Mantenha seus exercícios e trabalhos sob controle."],
+            agenda: ["Agenda de Estudos", "Planeje suas atividades e compromissos letivos."],
+            cronometro: ["Cronômetro & Pomodoro", "Meça seu tempo de estudo focado com intervalos."],
+            metas: ["Metas Pessoais", "Defina objetivos claros para motivar seus estudos."],
+            anotacoes: ["Anotações & Resumos", "Guarde conceitos-chave de cada matéria."],
+            estatisticas: ["Estatísticas", "Análise de métricas e evolução de rendimento."]
+        };
+
+        function openPage(pageId) {
+            pages.forEach(page => page.classList.add("hidden"));
+            const targetPage = document.getElementById(pageId);
+            if (targetPage) targetPage.classList.remove("hidden");
+
+            document.querySelectorAll(".menu-item").forEach(item => {
+                item.classList.toggle("active-nav-item", item.dataset.page === pageId);
+            });
+
+            if (pageInfo[pageId]) {
+                pageTitle.textContent = pageInfo[pageId][0];
+                pageSubtitle.textContent = pageInfo[pageId][1];
+            }
+
+            document.getElementById("sidebar").classList.add("-translate-x-full");
+            document.getElementById("sidebarOverlay").classList.add("hidden");
+
+            renderAll();
+        }
+
+        document.querySelectorAll("[data-page]").forEach(btn => {
+            btn.addEventListener("click", () => openPage(btn.dataset.page));
+        });
+
+        document.querySelectorAll("[data-page-target]").forEach(btn => {
+            btn.addEventListener("click", () => openPage(btn.dataset.pageTarget));
+        });
+
+        // Mobile Sidebar Controls
+        document.getElementById("mobileMenu").addEventListener("click", () => {
+            document.getElementById("sidebar").classList.remove("-translate-x-full");
+            document.getElementById("sidebarOverlay").classList.remove("hidden");
+        });
+        document.getElementById("sidebarOverlay").addEventListener("click", () => {
+            document.getElementById("sidebar").classList.add("-translate-x-full");
+            document.getElementById("sidebarOverlay").classList.add("hidden");
+        });
+
+        /* Modal Operations */
+        const modalOverlay = document.getElementById("modalOverlay");
+        const modalContent = document.getElementById("modalContent");
+        const modalClose = document.getElementById("modalClose");
+
+        function openModal(content) {
+            modalContent.innerHTML = content;
+            modalOverlay.classList.remove("hidden");
+            modalOverlay.classList.add("flex");
+        }
+
+        function closeModal() {
+            modalOverlay.classList.add("hidden");
+            modalOverlay.classList.remove("flex");
+        }
+
+        modalClose.addEventListener("click", closeModal);
+        modalOverlay.addEventListener("click", (e) => {
+            if (e.target === modalOverlay) closeModal();
+        });
+
+        document.querySelectorAll("[data-open]").forEach(btn => {
+            btn.addEventListener("click", () => {
+                const type = btn.dataset.open;
+                if (type === "addSubject") showSubjectModal();
+                if (type === "addTask") showTaskModal();
+                if (type === "addSchedule") showScheduleModal();
+                if (type === "addGoal") showGoalModal();
+                if (type === "addNote") showNoteModal();
+            });
+        });
+
+        /* =========================================================
+           MATÉRIAS / SUBJECTS
+        ========================================================= */
+        function showSubjectModal(editId = null) {
+            const subject = db.subjects.find(s => s.id === editId);
+            openModal(`
+                <h3 class="text-xl font-bold text-white mb-4">${subject ? 'Editar Matéria' : 'Nova Matéria'}</h3>
+                <form id="subjectForm" class="space-y-4">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-400 mb-1">Nome da Matéria</label>
+                        <input id="subjectName" required value="${subject?.name || ''}" placeholder="Ex: Cálculo I, História..." class="w-full px-4 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-sm text-slate-200 focus:outline-none focus:border-brand-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-400 mb-1">Descrição</label>
+                        <input id="subjectDescription" value="${subject?.description || ''}" placeholder="Ex: Tópicos de derivadas..." class="w-full px-4 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-sm text-slate-200 focus:outline-none focus:border-brand-500">
+                    </div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-400 mb-1">Progresso (%)</label>
+                            <input id="subjectProgressInput" type="number" min="0" max="100" value="${subject?.progress || 0}" class="w-full px-4 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-sm text-slate-200 focus:outline-none focus:border-brand-500">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-400 mb-1">Cor de Destaque</label>
+                            <input id="subjectColor" type="color" value="${subject?.color || '#3b82f6'}" class="w-full h-10 rounded-xl bg-slate-950 border border-slate-800 cursor-pointer">
+                        </div>
+                    </div>
+                    <div class="flex justify-end gap-3 pt-4 border-t border-slate-800">
+                        <button type="button" onclick="closeModal()" class="px-4 py-2 rounded-xl bg-slate-800 text-slate-300 text-xs font-semibold">Cancelar</button>
+                        <button type="submit" class="px-4 py-2 rounded-xl bg-brand-600 text-white text-xs font-semibold">Salvar Matéria</button>
+                    </div>
+                </form>
+            `);
+
+            document.getElementById("subjectForm").addEventListener("submit", (e) => {
+                e.preventDefault();
+                const data = {
+                    id: editId || generateId(),
+                    name: document.getElementById("subjectName").value.trim(),
+                    description: document.getElementById("subjectDescription").value.trim(),
+                    progress: Number(document.getElementById("subjectProgressInput").value),
+                    color: document.getElementById("subjectColor").value
+                };
+
+                if (editId) {
+                    const index = db.subjects.findIndex(s => s.id === editId);
+                    db.subjects[index] = data;
+                    notify("Matéria atualizada.");
+                } else {
+                    db.subjects.push(data);
+                    notify("Matéria criada com sucesso!");
+                }
+
+                saveDatabase();
+                closeModal();
+                renderAll();
+            });
+        }
+
+        function deleteSubject(id) {
+            if (!confirm("Deseja realmente excluir esta matéria?")) return;
+            db.subjects = db.subjects.filter(s => s.id !== id);
+            saveDatabase();
+            renderAll();
+            notify("Matéria excluída.");
+        }
+
+        function renderSubjects() {
+            const container = document.getElementById("subjectsGrid");
+            if (!container) return;
+
+            let subjects = [...db.subjects];
+            const search = document.getElementById("subjectSearch")?.value.toLowerCase() || "";
+            const filter = document.getElementById("subjectFilter")?.value || "all";
+
+            subjects = subjects.filter(subject => {
+                const matchesSearch = subject.name.toLowerCase().includes(search);
+                let matchesFilter = true;
+                if (filter === "progress") matchesFilter = subject.progress < 100;
+                if (filter === "completed") matchesFilter = subject.progress >= 100;
+                return matchesSearch && matchesFilter;
+            });
+
+            if (!subjects.length) {
+                container.innerHTML = `
+                    <div class="col-span-full py-12 text-center text-slate-500 space-y-2">
+                        <span class="text-4xl block">📚</span>
+                        <p class="text-sm">Nenhuma matéria encontrada.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = subjects.map(s => `
+                <div class="p-5 rounded-2xl bg-slate-900/60 border border-slate-800/80 hover:border-slate-700 transition space-y-4">
+                    <div class="flex items-center justify-between">
+                        <span class="w-3 h-3 rounded-full" style="background-color: ${s.color}"></span>
+                        <div class="flex gap-2">
+                            <button onclick="showSubjectModal('${s.id}')" class="text-xs px-2 py-1 rounded bg-slate-800 text-slate-300 hover:text-white">Editar</button>
+                            <button onclick="deleteSubject('${s.id}')" class="text-xs px-2 py-1 rounded bg-rose-500/20 text-rose-400">Excluir</button>
+                        </div>
+                    </div>
+                    <div>
+                        <h4 class="font-bold text-white">${escapeHTML(s.name)}</h4>
+                        <p class="text-xs text-slate-400 mt-1">${escapeHTML(s.description || 'Sem descrição')}</p>
+                    </div>
+                    <div>
+                        <div class="flex justify-between text-xs text-slate-400 mb-1">
+                            <span>Progresso</span>
+                            <span class="font-bold text-slate-200">${s.progress}%</span>
+                        </div>
+                        <div class="w-full h-2 rounded-full bg-slate-800 overflow-hidden">
+                            <div class="h-full rounded-full transition-all duration-500" style="width: ${s.progress}%; background-color: ${s.color}"></div>
+                        </div>
+                    </div>
+                </div>
+            `).join("");
+        }
+
+        /* =========================================================
+           TAREFAS / TASKS
+        ========================================================= */
+        let currentTaskFilter = "all";
+
+        function showTaskModal(editId = null) {
+            const task = db.tasks.find(t => t.id === editId);
+            openModal(`
+                <h3 class="text-xl font-bold text-white mb-4">${task ? 'Editar Tarefa' : 'Nova Tarefa'}</h3>
+                <form id="taskForm" class="space-y-4">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-400 mb-1">Título da Tarefa</label>
+                        <input id="taskTitle" required value="${task?.title || ''}" placeholder="Ex: Fazer lista de exercícios..." class="w-full px-4 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-sm text-slate-200 focus:outline-none focus:border-brand-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-400 mb-1">Matéria Associada</label>
+                        <select id="taskSubject" class="w-full px-4 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-sm text-slate-200 focus:outline-none focus:border-brand-500">
+                            <option value="">Geral / Sem Matéria</option>
+                            ${db.subjects.map(s => `<option value="${s.id}" ${task?.subjectId === s.id ? 'selected' : ''}>${escapeHTML(s.name)}</option>`).join("")}
+                        </select>
+                    </div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-400 mb-1">Prazo de Entrega</label>
+                            <input id="taskDate" type="date" value="${task?.date || ''}" class="w-full px-4 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-sm text-slate-200 focus:outline-none focus:border-brand-500">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-400 mb-1">Prioridade</label>
+                            <select id="taskPriority" class="w-full px-4 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-sm text-slate-200 focus:outline-none focus:border-brand-500">
+                                <option value="low" ${task?.priority === 'low' ? 'selected' : ''}>Baixa</option>
+                                <option value="medium" ${task?.priority === 'medium' ? 'selected' : ''}>Média</option>
+                                <option value="high" ${task?.priority === 'high' ? 'selected' : ''}>Alta</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="flex justify-end gap-3 pt-4 border-t border-slate-800">
+                        <button type="button" onclick="closeModal()" class="px-4 py-2 rounded-xl bg-slate-800 text-slate-300 text-xs font-semibold">Cancelar</button>
+                        <button type="submit" class="px-4 py-2 rounded-xl bg-brand-600 text-white text-xs font-semibold">Salvar Tarefa</button>
+                    </div>
+                </form>
+            `);
+
+            document.getElementById("taskForm").addEventListener("submit", (e) => {
+                e.preventDefault();
+                const data = {
+                    id: editId || generateId(),
+                    title: document.getElementById("taskTitle").value.trim(),
+                    subjectId: document.getElementById("taskSubject").value,
+                    date: document.getElementById("taskDate").value,
+                    priority: document.getElementById("taskPriority").value,
+                    completed: task?.completed || false
+                };
+
+                if (editId) {
+                    const index = db.tasks.findIndex(t => t.id === editId);
+                    db.tasks[index] = data;
+                    notify("Tarefa atualizada.");
+                } else {
+                    db.tasks.push(data);
+                    notify("Nova tarefa criada!");
+                }
+
+                saveDatabase();
+                closeModal();
+                renderAll();
+            });
+        }
+
+        function toggleTask(id) {
+            const task = db.tasks.find(t => t.id === id);
+            if (!task) return;
+            task.completed = !task.completed;
+            saveDatabase();
+            renderAll();
+        }
+
+        function deleteTask(id) {
+            if (!confirm("Excluir esta tarefa?")) return;
+            db.tasks = db.tasks.filter(t => t.id !== id);
+            saveDatabase();
+            renderAll();
+            notify("Tarefa excluída.");
+        }
+
+        function renderTasks() {
+            const container = document.getElementById("tasksContainer");
+            if (!container) return;
+
+            let tasks = [...db.tasks];
+            if (currentTaskFilter === "pending") tasks = tasks.filter(t => !t.completed);
+            if (currentTaskFilter === "completed") tasks = tasks.filter(t => t.completed);
+            if (currentTaskFilter === "high") tasks = tasks.filter(t => t.priority === "high" && !t.completed);
+
+            if (!tasks.length) {
+                container.innerHTML = `
+                    <div class="py-12 text-center text-slate-500 space-y-2">
+                        <span class="text-4xl block">✅</span>
+                        <p class="text-sm">Nenhuma tarefa encontrada neste filtro.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = tasks.map(task => {
+                const subject = db.subjects.find(s => s.id === task.subjectId);
+                const priorityBadge = task.priority === 'high' 
+                    ? '<span class="px-2 py-0.5 text-[10px] font-bold rounded bg-rose-500/20 text-rose-400">ALTA</span>'
+                    : task.priority === 'medium'
+                    ? '<span class="px-2 py-0.5 text-[10px] font-bold rounded bg-amber-500/20 text-amber-400">MÉDIA</span>'
+                    : '<span class="px-2 py-0.5 text-[10px] font-bold rounded bg-emerald-500/20 text-emerald-400">BAIXA</span>';
+
+                return `
+                    <div class="p-4 rounded-xl bg-slate-900/60 border border-slate-800/80 flex items-center justify-between gap-4 hover:border-slate-700 transition">
+                        <div class="flex items-center gap-3">
+                            <button onclick="toggleTask('${task.id}')" class="w-6 h-6 rounded-lg border border-slate-700 flex items-center justify-center ${task.completed ? 'bg-emerald-500 border-emerald-500 text-white font-bold text-xs' : 'bg-slate-950'}">
+                                ${task.completed ? '✓' : ''}
+                            </button>
+                            <div>
+                                <h5 class="text-sm font-semibold ${task.completed ? 'line-through text-slate-500' : 'text-slate-200'}">${escapeHTML(task.title)}</h5>
+                                <p class="text-xs text-slate-400 mt-0.5">
+                                    ${subject ? escapeHTML(subject.name) : 'Sem Matéria'} ${task.date ? '• ' + formatDate(task.date) : ''}
+                                </p>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            ${priorityBadge}
+                            <button onclick="showTaskModal('${task.id}')" class="p-1.5 rounded bg-slate-800 text-slate-400 hover:text-white text-xs">✎</button>
+                            <button onclick="deleteTask('${task.id}')" class="p-1.5 rounded bg-rose-500/20 text-rose-400 hover:bg-rose-500/30 text-xs">🗑</button>
+                        </div>
+                    </div>
+                `;
+            }).join("");
+        }
+
+        document.querySelectorAll("[data-task-filter]").forEach(btn => {
+            btn.addEventListener("click", () => {
+                document.querySelectorAll("[data-task-filter]").forEach(b => {
+                    b.className = "px-4 py-2 rounded-xl text-xs font-semibold bg-slate-800 text-slate-400 hover:text-white transition";
+                });
+                btn.className = "px-4 py-2 rounded-xl text-xs font-semibold bg-brand-600 text-white transition";
+                currentTaskFilter = btn.dataset.taskFilter;
+                renderTasks();
+            });
+        });
+
+        /* =========================================================
+           AGENDA & CALENDAR
+        ========================================================= */
+        let calendarDate = new Date();
+
+        function showScheduleModal() {
+            openModal(`
+                <h3 class="text-xl font-bold text-white mb-4">Planejar Estudo</h3>
+                <form id="scheduleForm" class="space-y-4">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-400 mb-1">Matéria</label>
+                        <select id="scheduleSubject" required class="w-full px-4 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-sm text-slate-200 focus:outline-none focus:border-brand-500">
+                            <option value="">Selecione uma matéria</option>
+                            ${db.subjects.map(s => `<option value="${s.id}">${escapeHTML(s.name)}</option>`).join("")}
+                        </select>
+                    </div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-400 mb-1">Data</label>
+                            <input id="scheduleDate" type="date" required class="w-full px-4 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-sm text-slate-200 focus:outline-none focus:border-brand-500">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-400 mb-1">Horário</label>
+                            <input id="scheduleTime" type="time" value="14:00" class="w-full px-4 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-sm text-slate-200 focus:outline-none focus:border-brand-500">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-400 mb-1">Duração (minutos)</label>
+                        <input id="scheduleDuration" type="number" value="60" min="5" class="w-full px-4 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-sm text-slate-200 focus:outline-none focus:border-brand-500">
+                    </div>
+                    <div class="flex justify-end gap-3 pt-4 border-t border-slate-800">
+                        <button type="button" onclick="closeModal()" class="px-4 py-2 rounded-xl bg-slate-800 text-slate-300 text-xs font-semibold">Cancelar</button>
+                        <button type="submit" class="px-4 py-2 rounded-xl bg-brand-600 text-white text-xs font-semibold">Agendar</button>
+                    </div>
+                </form>
+            `);
+
+            document.getElementById("scheduleForm").addEventListener("submit", (e) => {
+                e.preventDefault();
+                db.schedules.push({
+                    id: generateId(),
+                    subjectId: document.getElementById("scheduleSubject").value,
+                    date: document.getElementById("scheduleDate").value,
+                    time: document.getElementById("scheduleTime").value,
+                    duration: Number(document.getElementById("scheduleDuration").value)
+                });
+                saveDatabase();
+                closeModal();
+                renderAll();
+                notify("Estudo planejado adicionado!");
+            });
+        }
+
+        function renderCalendar() {
+            const title = document.getElementById("calendarTitle");
+            const daysContainer = document.getElementById("calendarDays");
+            if (!title || !daysContainer) return;
+
+            const year = calendarDate.getFullYear();
+            const month = calendarDate.getMonth();
+            const monthNames = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
+
+            title.textContent = `${monthNames[month]} ${year}`;
+            const firstDay = new Date(year, month, 1).getDay();
+            const lastDate = new Date(year, month + 1, 0).getDate();
+            const today = new Date();
+
+            let html = "";
+            for (let i = 0; i < firstDay; i++) {
+                html += `<div class="h-24 rounded-xl bg-slate-950/40 border border-slate-900/50"></div>`;
+            }
+
+            for (let day = 1; day <= lastDate; day++) {
+                const dateString = `${year}-${String(month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+                const events = db.schedules.filter(s => s.date === dateString);
+                const isToday = today.getFullYear() === year && today.getMonth() === month && today.getDate() === day;
+
+                html += `
+                    <div onclick="selectCalendarDay('${dateString}')" class="h-24 p-2 rounded-xl border ${isToday ? 'bg-brand-500/10 border-brand-500/40' : 'bg-slate-950/60 border-slate-800/60'} hover:border-slate-700 cursor-pointer overflow-hidden transition">
+                        <span class="text-xs font-bold ${isToday ? 'text-brand-400' : 'text-slate-400'}">${day}</span>
+                        <div class="mt-1 space-y-1">
+                            ${events.map(ev => {
+                                const subject = db.subjects.find(s => s.id === ev.subjectId);
+                                return `<div class="px-1.5 py-0.5 rounded bg-brand-500/20 text-brand-300 text-[10px] truncate">${escapeHTML(subject?.name || 'Estudo')}</div>`;
+                            }).join("")}
+                        </div>
+                    </div>
+                `;
+            }
+
+            daysContainer.innerHTML = html;
+        }
+
+        function selectCalendarDay(date) {
+            const schedules = db.schedules.filter(s => s.date === date);
+            if (!schedules.length) {
+                showScheduleModal();
+                setTimeout(() => {
+                    const el = document.getElementById("scheduleDate");
+                    if (el) el.value = date;
+                }, 50);
+                return;
+            }
+
+            const eventsList = schedules.map(s => {
+                const subject = db.subjects.find(sub => sub.id === s.subjectId);
+                return `• ${subject?.name || 'Estudo'} às ${s.time} (${s.duration} min)`;
+            }).join("<br>");
+
+            openModal(`
+                <h3 class="text-lg font-bold text-white mb-2">Estudos em ${formatDate(date)}</h3>
+                <div class="text-sm text-slate-300 space-y-2 mb-4">${eventsList}</div>
+                <button onclick="showScheduleModal()" class="w-full py-2.5 rounded-xl bg-brand-600 text-white font-semibold text-xs">+ Adicionar mais um estudo</button>
+            `);
+        }
+
+        document.getElementById("previousMonth")?.addEventListener("click", () => {
+            calendarDate.setMonth(calendarDate.getMonth() - 1);
+            renderCalendar();
+        });
+        document.getElementById("nextMonth")?.addEventListener("click", () => {
+            calendarDate.setMonth(calendarDate.getMonth() + 1);
+            renderCalendar();
+        });
+
+        /* =========================================================
+           CRONÔMETRO & POMODORO TIMER
+        ========================================================= */
+        let timerInterval = null;
+        let timerSeconds = 0;
+        let timerRunning = false;
+        let pomodoroMode = 'pomodoro'; // 'pomodoro', 'shortBreak', 'longBreak'
+
+        const presetTimes = {
+            pomodoro: 25 * 60,
+            shortBreak: 5 * 60,
+            longBreak: 15 * 60
+        };
+
+        function setTimerMode(mode) {
+            if (timerRunning) {
+                clearInterval(timerInterval);
+                timerRunning = false;
+            }
+            pomodoroMode = mode;
+            timerSeconds = presetTimes[mode];
+            updateTimerDisplay();
+
+            const modes = ['pomodoro', 'shortBreak', 'longBreak'];
+            modes.forEach(m => {
+                const btn = document.getElementById(`mode${m.charAt(0).toUpperCase() + m.slice(1)}`);
+                if (btn) {
+                    if (m === mode) {
+                        btn.className = "flex-1 py-2 rounded-xl text-xs font-bold bg-brand-600 text-white transition";
+                    } else {
+                        btn.className = "flex-1 py-2 rounded-xl text-xs font-bold text-slate-400 hover:text-white transition";
+                    }
+                }
+            });
+
+            const ring = document.getElementById("timerRing");
+            if (ring) {
+                ring.classList.remove("timer-active-ring");
+            }
+        }
+
+        function updateTimerDisplay() {
+            const hours = Math.floor(timerSeconds / 3600);
+            const minutes = Math.floor((timerSeconds % 3600) / 60);
+            const seconds = timerSeconds % 60;
+
+            const formatted = (hours > 0 ? `${String(hours).padStart(2, "0")}:` : '') +
+                `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
+
+            const el = document.getElementById("timerDisplay");
+            if (el) el.textContent = formatted;
+        }
+
+        document.getElementById("startTimer")?.addEventListener("click", () => {
+            if (timerRunning) return;
+            timerRunning = true;
+            document.getElementById("timerRing")?.classList.add("timer-active-ring");
+
+            timerInterval = setInterval(() => {
+                if (pomodoroMode !== 'free' && timerSeconds > 0) {
+                    timerSeconds--;
+                    if (timerSeconds === 0) {
+                        playChime();
+                        notify("Sessão Pomodoro Concluída!", "success");
+                        clearInterval(timerInterval);
+                        timerRunning = false;
+                    }
+                } else {
+                    timerSeconds++;
+                }
+                updateTimerDisplay();
+            }, 1000);
+
+            notify("Cronômetro em andamento...");
+        });
+
+        document.getElementById("pauseTimer")?.addEventListener("click", () => {
+            if (!timerRunning) return;
+            clearInterval(timerInterval);
+            timerRunning = false;
+            document.getElementById("timerRing")?.classList.remove("timer-active-ring");
+            notify("Cronômetro pausado.");
+        });
+
+        document.getElementById("stopTimer")?.addEventListener("click", () => {
+            clearInterval(timerInterval);
+            timerRunning = false;
+            document.getElementById("timerRing")?.classList.remove("timer-active-ring");
+
+            const initialSecs = presetTimes[pomodoroMode] || 0;
+            const elapsed = initialSecs > timerSeconds ? (initialSecs - timerSeconds) : timerSeconds;
+
+            if (elapsed > 0) {
+                const subjectId = document.getElementById("timerSubject").value;
+                db.studySessions.push({
+                    id: generateId(),
+                    subjectId,
+                    seconds: elapsed,
+                    date: new Date().toISOString().split("T")[0],
+                    createdAt: new Date().toISOString()
+                });
+                saveDatabase();
+                notify("Sessão de estudos salva com sucesso!");
+            }
+
+            timerSeconds = presetTimes[pomodoroMode] || 0;
+            updateTimerDisplay();
+            renderAll();
+        });
+
+        /* =========================================================
+           HISTÓRICO DE ESTUDOS
+        ========================================================= */
+        function renderStudyHistory() {
+            const container = document.getElementById("studyHistory");
+            if (!container) return;
+
+            const sessions = [...db.studySessions].reverse().slice(0, 5);
+            if (!sessions.length) {
+                container.innerHTML = `<p class="text-xs text-slate-500 py-4 text-center">Nenhuma sessão registrada recentemente.</p>`;
+                return;
+            }
+
+            container.innerHTML = sessions.map(session => {
+                const subject = db.subjects.find(s => s.id === session.subjectId);
+                return `
+                    <div class="p-3 rounded-xl bg-slate-950/60 border border-slate-800 flex items-center justify-between text-xs">
+                        <div class="flex items-center gap-3">
+                            <span class="text-base">⏱️</span>
+                            <div>
+                                <strong class="block text-slate-200">${escapeHTML(subject?.name || 'Estudo Geral')}</strong>
+                                <span class="text-slate-400">${formatDate(session.date)}</span>
+                            </div>
+                        </div>
+                        <span class="font-bold text-brand-400">${formatSeconds(session.seconds)}</span>
+                    </div>
+                `;
+            }).join("");
+        }
+
+        /* =========================================================
+           METAS / GOALS
+        ========================================================= */
+        function showGoalModal(editId = null) {
+            const goal = db.goals.find(g => g.id === editId);
+            openModal(`
+                <h3 class="text-xl font-bold text-white mb-4">${goal ? 'Editar Meta' : 'Nova Meta'}</h3>
+                <form id="goalForm" class="space-y-4">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-400 mb-1">Título da Meta</label>
+                        <input id="goalTitle" required value="${goal?.title || ''}" placeholder="Ex: Estudar 20 horas no mês" class="w-full px-4 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-sm text-slate-200 focus:outline-none focus:border-brand-500">
+                    </div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-400 mb-1">Objetivo Numérico</label>
+                            <input id="goalTarget" type="number" min="1" value="${goal?.target || 10}" class="w-full px-4 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-sm text-slate-200 focus:outline-none focus:border-brand-500">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-400 mb-1">Unidade</label>
+                            <select id="goalUnit" class="w-full px-4 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-sm text-slate-200 focus:outline-none focus:border-brand-500">
+                                <option value="horas" ${goal?.unit === 'horas' ? 'selected' : ''}>Horas</option>
+                                <option value="tarefas" ${goal?.unit === 'tarefas' ? 'selected' : ''}>Tarefas</option>
+                                <option value="dias" ${goal?.unit === 'dias' ? 'selected' : ''}>Dias</option>
+                                <option value="páginas" ${goal?.unit === 'páginas' ? 'selected' : ''}>Páginas</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="flex justify-end gap-3 pt-4 border-t border-slate-800">
+                        <button type="button" onclick="closeModal()" class="px-4 py-2 rounded-xl bg-slate-800 text-slate-300 text-xs font-semibold">Cancelar</button>
+                        <button type="submit" class="px-4 py-2 rounded-xl bg-brand-600 text-white text-xs font-semibold">Salvar Meta</button>
+                    </div>
+                </form>
+            `);
+
+            document.getElementById("goalForm").addEventListener("submit", (e) => {
+                e.preventDefault();
+                const data = {
+                    id: editId || generateId(),
+                    title: document.getElementById("goalTitle").value.trim(),
+                    target: Number(document.getElementById("goalTarget").value),
+                    unit: document.getElementById("goalUnit").value,
+                    current: goal?.current || 0
+                };
+
+                if (editId) {
+                    const index = db.goals.findIndex(g => g.id === editId);
+                    db.goals[index] = data;
+                } else {
+                    db.goals.push(data);
+                }
+
+                saveDatabase();
+                closeModal();
+                renderAll();
+                notify("Meta salva!");
+            });
+        }
+
+        function increaseGoal(id) {
+            const goal = db.goals.find(g => g.id === id);
+            if (!goal) return;
+            goal.current++;
+            if (goal.current > goal.target) goal.current = goal.target;
+            saveDatabase();
+            renderAll();
+        }
+
+        function deleteGoal(id) {
+            if (!confirm("Excluir esta meta?")) return;
+            db.goals = db.goals.filter(g => g.id !== id);
+            saveDatabase();
+            renderAll();
+        }
+
+        function renderGoals() {
+            const container = document.getElementById("goalsContainer");
+            if (!container) return;
+
+            if (!db.goals.length) {
+                container.innerHTML = `
+                    <div class="col-span-full py-12 text-center text-slate-500 space-y-2">
+                        <span class="text-4xl block">🎯</span>
+                        <p class="text-sm">Nenhuma meta cadastrada.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = db.goals.map(goal => {
+                const percentage = Math.min(100, Math.round((goal.current / goal.target) * 100));
+                return `
+                    <div class="p-5 rounded-2xl bg-slate-900/60 border border-slate-800/80 space-y-4">
+                        <div class="flex justify-between items-start">
+                            <h4 class="font-bold text-white text-sm">${escapeHTML(goal.title)}</h4>
+                            <span class="text-xs font-bold text-brand-400">${percentage}%</span>
+                        </div>
+                        <div class="w-full h-2 rounded-full bg-slate-800 overflow-hidden">
+                            <div class="h-full rounded-full bg-gradient-to-r from-brand-500 to-purple-500 transition-all duration-500" style="width: ${percentage}%"></div>
+                        </div>
+                        <div class="flex justify-between items-center text-xs text-slate-400">
+                            <span>Progresso: ${goal.current} / ${goal.target} ${goal.unit}</span>
+                            <div class="flex gap-2">
+                                <button onclick="increaseGoal('${goal.id}')" class="px-2.5 py-1 rounded-lg bg-brand-500/20 text-brand-300 font-semibold">+ 1</button>
+                                <button onclick="deleteGoal('${goal.id}')" class="px-2.5 py-1 rounded-lg bg-rose-500/20 text-rose-400">🗑</button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join("");
+        }
+
+        /* =========================================================
+           ANOTAÇÕES / NOTES
+        ========================================================= */
+        function showNoteModal(editId = null) {
+            const note = db.notes.find(n => n.id === editId);
+            openModal(`
+                <h3 class="text-xl font-bold text-white mb-4">${note ? 'Editar Anotação' : 'Nova Anotação'}</h3>
+                <form id="noteForm" class="space-y-4">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-400 mb-1">Título</label>
+                        <input id="noteTitle" required value="${note?.title || ''}" placeholder="Ex: Fórmulas de Física..." class="w-full px-4 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-sm text-slate-200 focus:outline-none focus:border-brand-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-400 mb-1">Conteúdo da Anotação</label>
+                        <textarea id="noteContent" required placeholder="Escreva suas anotações aqui..." class="w-full h-32 px-4 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-sm text-slate-200 focus:outline-none focus:border-brand-500 resize-none">${note?.content || ''}</textarea>
+                    </div>
+                    <div class="flex justify-end gap-3 pt-4 border-t border-slate-800">
+                        <button type="button" onclick="closeModal()" class="px-4 py-2 rounded-xl bg-slate-800 text-slate-300 text-xs font-semibold">Cancelar</button>
+                        <button type="submit" class="px-4 py-2 rounded-xl bg-brand-600 text-white text-xs font-semibold">Salvar Anotação</button>
+                    </div>
+                </form>
+            `);
+
+            document.getElementById("noteForm").addEventListener("submit", (e) => {
+                e.preventDefault();
+                const data = {
+                    id: editId || generateId(),
+                    title: document.getElementById("noteTitle").value.trim(),
+                    content: document.getElementById("noteContent").value.trim(),
+                    date: new Date().toISOString()
+                };
+
+                if (editId) {
+                    const index = db.notes.findIndex(n => n.id === editId);
+                    db.notes[index] = data;
+                } else {
+                    db.notes.push(data);
+                }
+
+                saveDatabase();
+                closeModal();
+                renderAll();
+                notify("Anotação salva!");
+            });
+        }
+
+        function deleteNote(id) {
+            if (!confirm("Excluir esta anotação?")) return;
+            db.notes = db.notes.filter(n => n.id !== id);
+            saveDatabase();
+            renderAll();
+        }
+
+        function renderNotes() {
+            const container = document.getElementById("notesGrid");
+            if (!container) return;
+
+            if (!db.notes.length) {
+                container.innerHTML = `
+                    <div class="col-span-full py-12 text-center text-slate-500 space-y-2">
+                        <span class="text-4xl block">📝</span>
+                        <p class="text-sm">Nenhuma anotação cadastrada.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = db.notes.map(note => `
+                <div class="p-5 rounded-2xl bg-slate-900/60 border border-slate-800/80 flex flex-col justify-between space-y-3">
+                    <div>
+                        <div class="flex items-center justify-between">
+                            <h4 class="font-bold text-white text-sm">${escapeHTML(note.title)}</h4>
+                            <div class="flex gap-1">
+                                <button onclick="showNoteModal('${note.id}')" class="p-1 rounded bg-slate-800 text-slate-400 hover:text-white text-xs">✎</button>
+                                <button onclick="deleteNote('${note.id}')" class="p-1 rounded bg-rose-500/20 text-rose-400 text-xs">🗑</button>
+                            </div>
+                        </div>
+                        <p class="text-xs text-slate-300 mt-2 whitespace-pre-wrap leading-relaxed">${escapeHTML(note.content)}</p>
+                    </div>
+                </div>
+            `).join("");
+        }
+
+        /* =========================================================
+           DASHBOARD RENDERING
+        ========================================================= */
+        function renderDashboard() {
+            document.getElementById("totalSubjects").textContent = db.subjects.length;
+
+            const totalSeconds = db.studySessions.reduce((acc, curr) => acc + curr.seconds, 0);
+            document.getElementById("totalHours").textContent = formatHours(totalSeconds);
+            document.getElementById("pendingTasks").textContent = db.tasks.filter(t => !t.completed).length;
+            document.getElementById("completedGoals").textContent = db.goals.filter(g => g.current >= g.target).length;
+
+            renderDashboardStudies();
+            renderDashboardTasks();
+            renderSubjectProgress();
+        }
+
+        function renderDashboardStudies() {
+            const container = document.getElementById("dashboardStudies");
+            if (!container) return;
+
+            const schedules = [...db.schedules].sort((a,b) => `${a.date}${a.time}`.localeCompare(`${b.date}${b.time}`)).slice(0, 4);
+            if (!schedules.length) {
+                container.innerHTML = `<p class="text-xs text-slate-500 py-4 text-center">Nenhum estudo agendado.</p>`;
+                return;
+            }
+
+            container.innerHTML = schedules.map(schedule => {
+                const subject = db.subjects.find(s => s.id === schedule.subjectId);
+                return `
+                    <div class="p-3 rounded-xl bg-slate-950/60 border border-slate-800/80 flex items-center gap-3">
+                        <div class="w-8 h-8 rounded-lg bg-brand-500/15 text-brand-400 flex items-center justify-center font-bold text-sm">📚</div>
+                        <div class="flex-1">
+                            <h5 class="text-xs font-bold text-white">${escapeHTML(subject?.name || 'Estudo')}</h5>
+                            <p class="text-[11px] text-slate-400">${formatDate(schedule.date)} às ${schedule.time} • ${schedule.duration} min</p>
+                        </div>
+                    </div>
+                `;
+            }).join("");
+        }
+
+        function renderDashboardTasks() {
+            const container = document.getElementById("dashboardTasks");
+            if (!container) return;
+
+            const tasks = db.tasks.filter(t => !t.completed).slice(0, 4);
+            if (!tasks.length) {
+                container.innerHTML = `<p class="text-xs text-slate-500 py-4 text-center">Todas as tarefas foram completadas! 🎉</p>`;
+                return;
+            }
+
+            container.innerHTML = tasks.map(task => `
+                <div class="p-3 rounded-xl bg-slate-950/60 border border-slate-800/80 flex items-center justify-between">
+                    <div class="flex items-center gap-3">
+                        <button onclick="toggleTask('${task.id}')" class="w-5 h-5 rounded border border-slate-700 bg-slate-900"></button>
+                        <span class="text-xs font-semibold text-slate-200">${escapeHTML(task.title)}</span>
+                    </div>
+                    <span class="text-[10px] text-slate-400">${task.date ? formatDate(task.date) : ''}</span>
+                </div>
+            `).join("");
+        }
+
+        function renderSubjectProgress() {
+            const container = document.getElementById("subjectProgress");
+            if (!container) return;
+
+            if (!db.subjects.length) {
+                container.innerHTML = `<p class="text-xs text-slate-500 py-4 text-center">Cadastre matérias para visualizar seu progresso.</p>`;
+                return;
+            }
+
+            container.innerHTML = db.subjects.map(subject => `
+                <div class="space-y-1.5">
+                    <div class="flex justify-between text-xs">
+                        <span class="font-semibold text-slate-200">${escapeHTML(subject.name)}</span>
+                        <span class="font-bold text-brand-400">${subject.progress}%</span>
+                    </div>
+                    <div class="w-full h-2 rounded-full bg-slate-950 overflow-hidden">
+                        <div class="h-full rounded-full transition-all duration-500" style="width: ${subject.progress}%; background-color: ${subject.color}"></div>
+                    </div>
+                </div>
+            `).join("");
+        }
+
+        /* =========================================================
+           ESTATÍSTICAS / STATISTICS
+        ========================================================= */
+        function renderStatistics() {
+            const totalSeconds = db.studySessions.reduce((acc, curr) => acc + curr.seconds, 0);
+            document.getElementById("statsTotalHours").textContent = formatHours(totalSeconds);
+            document.getElementById("statsCompletedTasks").textContent = db.tasks.filter(t => t.completed).length;
+
+            const subjectSeconds = {};
+            db.studySessions.forEach(s => {
+                if (s.subjectId) {
+                    subjectSeconds[s.subjectId] = (subjectSeconds[s.subjectId] || 0) + s.seconds;
+                }
+            });
+
+            let mainSubject = null;
+            let maxSecs = 0;
+            Object.entries(subjectSeconds).forEach(([id, secs]) => {
+                if (secs > maxSecs) {
+                    maxSecs = secs;
+                    mainSubject = db.subjects.find(sub => sub.id === id);
+                }
+            });
+
+            document.getElementById("mainSubject").textContent = mainSubject?.name || "-";
+            calculateStreak();
+            renderHoursChart();
+        }
+
+        function calculateStreak() {
+            const dates = [...new Set(db.studySessions.map(s => s.date))].sort().reverse();
+            let streak = 0;
+            let current = new Date();
+
+            for (const date of dates) {
+                const expected = current.toISOString().split("T")[0];
+                if (date === expected) {
+                    streak++;
+                    current.setDate(current.getDate() - 1);
+                } else {
+                    break;
+                }
+            }
+
+            document.getElementById("studyStreak").textContent = `${streak} ${streak === 1 ? 'dia' : 'dias'}`;
+        }
+
+        function renderHoursChart() {
+            const container = document.getElementById("hoursChart");
+            if (!container) return;
+
+            const data = db.subjects.map(subject => {
+                const seconds = db.studySessions
+                    .filter(s => s.subjectId === subject.id)
+                    .reduce((acc, s) => acc + s.seconds, 0);
+                return { name: subject.name, hours: seconds / 3600, color: subject.color };
+            });
+
+            if (!data.length || data.every(d => d.hours === 0)) {
+                container.innerHTML = `<p class="text-xs text-slate-500 my-auto">Estude e registre sessões no cronômetro para visualizar seu gráfico.</p>`;
+                return;
+            }
+
+            const max = Math.max(...data.map(d => d.hours), 1);
+
+            container.innerHTML = data.map(item => {
+                const heightPercent = Math.max(12, (item.hours / max) * 100);
+                return `
+                    <div class="flex-1 flex flex-col items-center gap-2 group h-full justify-end">
+                        <span class="text-[10px] font-bold text-slate-400 group-hover:text-white transition">${item.hours.toFixed(1)}h</span>
+                        <div class="w-full max-w-[40px] rounded-t-lg transition-all duration-500 group-hover:opacity-80" style="height: ${heightPercent}%; background-color: ${item.color || '#3b82f6'}"></div>
+                        <span class="text-[10px] text-slate-400 truncate max-w-[60px] text-center">${escapeHTML(item.name)}</span>
+                    </div>
+                `;
+            }).join("");
+        }
+
+        function renderTimerSubjects() {
+            const select = document.getElementById("timerSubject");
+            if (!select) return;
+
+            select.innerHTML = `
+                <option value="">Geral / Sem matéria</option>
+                ${db.subjects.map(s => `<option value="${s.id}">${escapeHTML(s.name)}</option>`).join("")}
+            `;
+        }
+
+        /* =========================================================
+           THEME SWITCH & RESET
+        ========================================================= */
+        const themeButton = document.getElementById("themeButton");
+        themeButton?.addEventListener("click", () => {
+            const isDark = document.documentElement.classList.toggle("dark");
+            document.body.classList.toggle("light", !isDark);
+            
+            db.settings.theme = isDark ? "dark" : "light";
+            saveDatabase();
+            updateThemeUI();
+        });
+
+        function updateThemeUI() {
+            const isDark = db.settings.theme === "dark";
+            document.getElementById("themeIcon").textContent = isDark ? "🌙" : "☀️";
+            document.getElementById("themeText").textContent = isDark ? "Modo Escuro" : "Modo Claro";
+            
+            if (isDark) {
+                document.documentElement.classList.add("dark");
+                document.body.classList.remove("light");
+            } else {
+                document.documentElement.classList.remove("dark");
+                document.body.classList.add("light");
+            }
+        }
+
+        document.getElementById("resetButton")?.addEventListener("click", () => {
+            if (confirm("ATENÇÃO!\nIsso apagará permanentemente todas as suas matérias, tarefas, metas e históricos de estudo.\n\nDeseja prosseguir?")) {
+                localStorage.removeItem(DB_KEY);
+                location.reload();
+            }
+        });
+
+        /* Search listeners */
+        document.getElementById("subjectSearch")?.addEventListener("input", renderSubjects);
+        document.getElementById("subjectFilter")?.addEventListener("change", renderSubjects);
+
+        /* Formatting Helpers */
+        function formatDate(dateStr) {
+            if (!dateStr) return "";
+            const parts = dateStr.split("-");
+            if (parts.length !== 3) return dateStr;
+            return `${parts[2]}/${parts[1]}/${parts[0]}`;
+        }
+
+        function formatSeconds(seconds) {
+            const h = Math.floor(seconds / 3600);
+            const m = Math.floor((seconds % 3600) / 60);
+            const s = seconds % 60;
+            if (h > 0) return `${h}h ${m}m`;
+            return `${m}m ${s}s`;
+        }
+
+        function formatHours(seconds) {
+            const hours = seconds / 3600;
+            if (hours < 1) return `${Math.floor(seconds / 60)}m`;
+            return `${hours.toFixed(1)}h`;
+        }
+
+        function escapeHTML(value) {
+            return String(value ?? "")
+                .replaceAll("&", "&amp;")
+                .replaceAll("<", "&lt;")
+                .replaceAll(">", "&gt;")
+                .replaceAll('"', "&quot;")
+                .replaceAll("'", "&#039;");
+        }
+
+        /* Render All */
+        function renderAll() {
+            renderDashboard();
+            renderSubjects();
+            renderTasks();
+            renderCalendar();
+            renderStudyHistory();
+            renderGoals();
+            renderNotes();
+            renderStatistics();
+            renderTimerSubjects();
+            updateTimerDisplay();
+        }
+
+        /* Initial Setup */
+        updateThemeUI();
+        renderAll();
+    </script>
+</body>
+</html>
